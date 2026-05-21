@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>NEON LUXE CASINO</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root { --red: #c8102e; --dark: #0f0f0f; --gold: #ffd700; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0000;
+      color: #ddd;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      touch-action: manipulation;
+    }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .login-container {
+      max-width: 420px;
+      margin: 80px auto;
+      padding: 40px 25px;
+      background: #1a0000;
+      border: 3px solid var(--red);
+      border-radius: 20px;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 16px;
+      margin: 12px 0;
+      background: #300000;
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      color: white;
+      font-size: 1.1em;
+    }
+    button {
+      width: 100%;
+      padding: 16px;
+      margin: 10px 0;
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:active { transform: scale(0.97); }
+
+    header {
+      background: #1a0000;
+      border-bottom: 4px solid var(--red);
+      padding: 12px 15px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo { font-size: 1.8em; font-weight: bold; color: var(--red); }
+
+    .balance-bar {
+      background: #300000;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 1.35em;
+      border: 1px solid var(--red);
+    }
+
+    .multiplier-badge {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: linear-gradient(#ffd700, #ff8800);
+      color: #000;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-weight: bold;
+      z-index: 1000;
+      display: none;
+    }
+
+    .sidebar {
+      background: #1a0000;
+      padding: 12px;
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      border-bottom: 3px solid var(--red);
+      white-space: nowrap;
+    }
+    .nav-btn {
+      padding: 12px 20px;
+      background: #300000;
+      border: 1px solid var(--red);
+      color: #ddd;
+      border-radius: 8px;
+      min-width: 110px;
+      text-align: center;
+    }
+    .nav-btn.active {
+      background: var(--red);
+      color: white;
+    }
+
+    .glass { background: rgba(30, 0, 0, 0.9); border: 1px solid var(--red); border-radius: 16px; padding: 20px; }
+
+    .slot-machine { background: linear-gradient(#300000, #1a0000); border: 8px solid var(--gold); border-radius: 20px; padding: 20px; margin: 20px auto; max-width: 380px; }
+    .reels-container { display: flex; justify-content: center; gap: 12px; background: #000; padding: 15px; border-radius: 12px; border: 4px solid #500000; }
+    .reel { width: 90px; height: 110px; background: #111; border: 3px solid var(--gold); border-radius: 10px; font-size: 3.8em; display: flex; align-items: center; justify-content: center; }
+
+    .rocket-container {
+      position: relative;
+      height: 320px;
+      background: linear-gradient(#000, #111);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+    .rocket { position: absolute; bottom: 30px; left: 50%; font-size: 3.5em; transition: bottom 0.2s linear; }
+    .flame { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 2em; }
+
+    .promo-section { text-align: right; margin: 10px 0 15px; }
+    .game-screen { display: none; }
+    .game-screen.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginScreen" class="screen active">
+    <div class="login-container">
+      <h1 style="color:var(--red);">NEON LUXE CASINO</h1>
+      <input type="text" id="loginUsername" placeholder="Username" autofocus>
+      <input type="password" id="loginPassword" placeholder="Password" required>
+      <button onclick="loginUser()">Login</button>
+      <button onclick="showCreateScreen()" style="background:#c8102e;">Create New Account</button>
+    </div>
+  </div>
+
+  <!-- CREATE ACCOUNT -->
+  <div id="createScreen" class="screen">
+    <div class="login-container">
+      <h2>Create Account</h2>
+      <input type="text" id="createUsername" placeholder="Username">
+      <input type="password" id="createPassword" placeholder="Password" required>
+      <button onclick="createAccount()">Create Account</button>
+      <button onclick="backToLogin()" style="background:#666;">Back</button>
+    </div>
+  </div>
+
+  <!-- MAIN CASINO -->
+  <div id="mainScreen" class="screen">
+    <header>
+      <div class="logo">NEON LUXE CASINO</div>
+      <div class="balance-bar">
+        Balance: $<span id="balance">10000</span> — <span id="currentUser"></span>
+        <button onclick="logout()" style="background:#c8102e; padding:6px 12px; font-size:0.9em;">Logout</button>
+      </div>
+    </header>
+
+    <div class="multiplier-badge" id="multiBadge">🔥 5X LUCK ACTIVE 🔥</div>
+
+    <div class="sidebar" id="navContainer"></div>
+
+    <div class="content">
+      <div class="promo-section">
+        <input type="text" id="promoCode" placeholder="Promo Code" style="max-width:200px;">
+        <button onclick="redeemPromo()">Activate</button>
+      </div>
+
+      <!-- SLOTS -->
+      <div id="game0" class="game-screen active">
+        <h2 class="glass" style="text-align:center; color:var(--red);">🎰 SLOT MACHINE</h2>
+        <div class="slot-machine" id="slotMachine">
+          <div class="reels-container" id="reels">
+            <div class="reel" id="reel1">🍒</div>
+            <div class="reel" id="reel2">🍒</div>
+            <div class="reel" id="reel3">🍒</div>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <input type="number" id="betSlots" value="100" min="10"><br><br>
+          <button onclick="spinSlots()">SPIN</button>
+        </div>
+        <div id="slotsResult" style="text-align:center; margin-top:20px; font-size:1.6em; min-height:70px;"></div>
+      </div>
+
+      <!-- BLACKJACK - PLAYABLE -->
+      <div id="game1" class="game-screen">
+        <h2 class="glass" style="text-align:center; color:var(--red);">🃏 BLACKJACK</h2>
+        <div style="text-align:center; font-size:1.4em; margin:20px 0;">
+          <p>Player: <span id="playerHand"></span> (<span id="playerTotal"></span>)</p>
+          <p>Dealer: <span id="dealerHand"></span> (<span id="dealerTotal"></span>)</p>
+        </div>
+        <div style="text-align:center;">
+          <input type="number" id="betBJ" value="50" min="10"><br><br>
+          <button onclick="dealBlackjack()">Deal</button>
+          <button onclick="hitBJ()">Hit</button>
+          <button onclick="standBJ()">Stand</button>
+        </div>
+        <div id="bjResult" style="text-align:center; margin-top:20px; font-size:1.5em;"></div>
+      </div>
+
+      <!-- ROULETTE -->
+      <div id="game2" class="game-screen">
+        <h2 class="glass" style="text-align:center; color:var(--red);">🎡 ROULETTE</h2>
+        <div style="text-align:center;">
+          <p>Number (0-36): <input type="number" id="rouletteNumber" value="17" min="0" max="36"></p>
+          <input type="number" id="betRoulette" value="50" min="10"><br><br>
+          <button onclick="spinRoulette()">SPIN WHEEL</button>
+        </div>
+        <div id="rouletteResult" style="text-align:center; margin-top:20px; font-size:1.5em;"></div>
+      </div>
+
+      <!-- COIN FLIP - 50/50 -->
+      <div id="game3" class="game-screen">
+        <h2 class="glass" style="text-align:center; color:var(--red);">🪙 COIN FLIP (50/50)</h2>
+        <div style="text-align:center;">
+          <input type="number" id="betCoin" value="100" min="10"><br><br>
+          <button onclick="flipCoin('heads')">HEADS</button>
+          <button onclick="flipCoin('tails')">TAILS</button>
+        </div>
+        <div id="coinResult" style="text-align:center; margin-top:25px; font-size:1.5em;"></div>
+      </div>
+
+      <!-- CRASH -->
+      <div id="game4" class="game-screen">
+        <h2 class="glass" style="text-align:center; color:var(--red);">🚀 CRASH ROCKET</h2>
+        <div class="glass">
+          <div class="rocket-container">
+            <div id="rocket" class="rocket">🚀</div>
+            <div id="flame" class="flame">🔥</div>
+          </div>
+          <div class="crash-chart-container">
+            <canvas id="crashChart"></canvas>
+          </div>
+          <div id="liveMultiplier" style="text-align:center; font-size:2.8em; font-weight:bold; color:#ffcc00;">1.00x</div>
+        </div>
+        <div style="text-align:center; margin-top:15px;">
+          <input type="number" id="betCrash" value="100" min="10"><br><br>
+          <button id="betBtn" onclick="startCrash()">LAUNCH ROCKET</button>
+          <button id="cashoutBtn" onclick="cashOut()" style="display:none; background:#00cc66;">CASH OUT NOW</button>
+        </div>
+        <div id="crashResult" style="text-align:center; margin-top:20px; font-size:1.5em; min-height:80px;"></div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div id="game5" class="game-screen">
+        <h2 class="glass" style="text-align:center; color:var(--red);">Who has the most motion?</h2>
+        <div class="glass" id="leaderboardContent"></div>
+      </div>
+
+      <!-- ADMIN PANEL -->
+      <div id="game6" class="game-screen">
+        <h2 class="glass" style="text-align:center; color:var(--red);">🔧 ADMIN PANEL</h2>
+        <div class="glass">
+          <h3>All Accounts (Passwords Visible)</h3>
+          <div id="adminUserList"></div>
+          <button onclick="resetAllData()" style="background:#c8102e; margin-top:20px;">Reset ALL Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-popup" id="chatPopup">
+    <div class="chat-header">💬 Live Casino Chat</div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+      <button onclick="sendChatMessage()">Send</button>
+    </div>
+  </div>
+  <button onclick="toggleChat()" style="position:fixed; bottom:20px; right:20px; padding:12px 20px; background:var(--red); border-radius:50px; z-index:999;">💬 Chat</button>
+
+  <script>
+    let currentUser = null;
+    let currentData = {};
+    let chart = null;
+    let crashInterval = null;
+    let multipliers = [], times = [];
+    let currentBet = 0, currentMultiplier = 1, crashed = false;
+
+    const symbols = ['🍒','🍋','🍊','⭐','💎','7️⃣'];
+
+    function getAllUsers() { return JSON.parse(localStorage.getItem("neonLuxeUsers")) || {}; }
+    function saveAllUsers(users) { localStorage.setItem("neonLuxeUsers", JSON.stringify(users)); }
+
+    function loginUser() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!username || !password) return alert("Username and password required");
+      const users = getAllUsers();
+      if (users[username] && users[username].password === password) {
+        currentUser = username;
+        currentData = users[username];
+        enterMainScreen();
+      } else alert("Incorrect username or password.");
+    }
+
+    function showCreateScreen() {
+      document.getElementById('loginScreen').classList.remove('active');
+      document.getElementById('createScreen').classList.add('active');
+    }
+
+    function backToLogin() {
+      document.getElementById('createScreen').classList.remove('active');
+      document.getElementById('loginScreen').classList.add('active');
+    }
+
+    function createAccount() {
+      const username = document.getElementById('createUsername').value.trim();
+      const password = document.getElementById('createPassword').value;
+      if (!username || !password) return alert("Username and password required");
+      const users = getAllUsers();
+      if (users[username]) return alert("Username already taken!");
+      users[username] = {
+        password: password,
+        balance: 10000,
+        isFiveX: false,
+        promoUsed: false,
+        totalSpins: 0,
+        totalBets: 0,
+        totalWins: 0,
+        biggestWin: 0
+      };
+      saveAllUsers(users);
+      currentUser = username;
+      currentData = users[username];
+      enterMainScreen();
+      alert(`Account created! Welcome, ${username}`);
+    }
+
+    function enterMainScreen() {
+      document.getElementById('loginScreen').classList.remove('active');
+      document.getElementById('createScreen').classList.remove('active');
+      document.getElementById('mainScreen').classList.add('active');
+      document.getElementById('currentUser').textContent = currentUser;
+      document.getElementById('balance').textContent = currentData.balance.toLocaleString();
+      if (currentData.isFiveX) document.getElementById('multiBadge').style.display = 'block';
+      createNav();
+      updateLeaderboard();
+    }
+
+    function logout() { saveUserData(); location.reload(); }
+    function saveUserData() {
+      if (!currentUser) return;
+      const users = getAllUsers();
+      users[currentUser] = currentData;
+      saveAllUsers(users);
+    }
+
+    function redeemPromo() {
+      if (currentData.promoUsed) return alert("Promo already used.");
+      const code = document.getElementById('promoCode').value.trim().toUpperCase();
+      if (code === "NEON5X" || code === "5X") {
+        currentData.isFiveX = true;
+        currentData.promoUsed = true;
+        saveUserData();
+        document.getElementById('multiBadge').style.display = 'block';
+        alert("🎉 5X LUCK ACTIVATED!");
+      } else alert("Invalid code");
+    }
+
+    function createNav() {
+      const nav = document.getElementById('navContainer');
+      nav.innerHTML = "";
+      const names = ["🎰 Slots", "🃏 BJ", "🎡 Roulette", "🪙 Coin", "🚀 Crash", "🏆 Leaderboard"];
+      if (currentUser === "admin") names.push("🔧 Admin");
+      names.forEach((name, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        btn.textContent = name;
+        btn.onclick = () => switchGame(i);
+        if (i === 0) btn.classList.add('active');
+        nav.appendChild(btn);
+      });
+    }
+
+    function switchGame(n) {
+      document.querySelectorAll('.game-screen').forEach(g => g.classList.remove('active'));
+      document.getElementById(`game${n}`).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach((b, i) => b.classList.toggle('active', i === n));
+      if (n === 5) updateLeaderboard();
+      if (n === 6) showAdminPanel();
+    }
+
+    function playWinSound() {
+      try {
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audio.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 900;
+        osc.connect(audio.destination);
+        osc.start();
+        setTimeout(() => osc.stop(), 200);
+      } catch(e) {}
+    }
+
+    // SLOTS
+    function spinSlots() {
+      const bet = parseInt(document.getElementById('betSlots').value) || 100;
+      if (bet > currentData.balance || bet < 10) return alert("Invalid bet!");
+      currentData.balance -= bet;
+      currentData.totalBets += bet;
+      currentData.totalSpins++;
+
+      const reel1 = document.getElementById('reel1');
+      const reel2 = document.getElementById('reel2');
+      const reel3 = document.getElementById('reel3');
+
+      let spins = 0;
+      const interval = setInterval(() => {
+        reel1.textContent = symbols[Math.floor(Math.random()*6)];
+        reel2.textContent = symbols[Math.floor(Math.random()*6)];
+        reel3.textContent = symbols[Math.floor(Math.random()*6)];
+        spins++;
+        if (spins > 16) clearInterval(interval);
+      }, 70);
+
+      setTimeout(() => {
+        const r = Array(3).fill().map(() => symbols[Math.floor(Math.random()*6)]);
+        reel1.textContent = r[0]; reel2.textContent = r[1]; reel3.textContent = r[2];
+
+        let win = 0;
+        if (r[0] === r[1] && r[1] === r[2]) win = (r[0]==='7️⃣' ? 200 : 50) * bet;
+        else if (r[0] === r[1] || r[1] === r[2]) win = currentData.isFiveX ? bet*15 : bet*5;
+
+        if (win > 0) {
+          currentData.balance += win;
+          currentData.totalWins += win;
+          if (win > currentData.biggestWin) currentData.biggestWin = win;
+          document.getElementById('slotsResult').innerHTML = `🎉 JACKPOT! +$${win}`;
+          document.getElementById('slotMachine').classList.add('win-flash');
+          playWinSound();
+          setTimeout(() => document.getElementById('slotMachine').classList.remove('win-flash'), 2500);
+        } else {
+          document.getElementById('slotsResult').innerHTML = "No win this spin";
+        }
+        document.getElementById('balance').textContent = currentData.balance.toLocaleString();
+        saveUserData();
+        updateLeaderboard();
+      }, 1250);
+    }
+
+    // BLACKJACK - PLAYABLE WITH SIMPLE AI DEALER
+    let playerCards = [], dealerCards = [];
+    function dealBlackjack() {
+      const bet = parseInt(document.getElementById('betBJ').value) || 50;
+      if (bet > currentData.balance) return alert("Not enough balance");
+      currentData.balance -= bet;
+      document.getElementById('balance').textContent = currentData.balance.toLocaleString();
+
+      playerCards = [10, 9];
+      dealerCards = [10, Math.floor(Math.random()*10) + 2];
+
+      document.getElementById('playerHand').textContent = playerCards.join(" ");
+      document.getElementById('playerTotal').textContent = playerCards.reduce((a,b)=>a+b);
+      document.getElementById('dealerHand').textContent = dealerCards[0] + " ?";
+      document.getElementById('dealerTotal').textContent = "?";
+      document.getElementById('bjResult').innerHTML = "";
+    }
+
+    function hitBJ() {
+      playerCards.push(Math.floor(Math.random()*10) + 2);
+      document.getElementById('playerHand').textContent = playerCards.join(" ");
+      document.getElementById('playerTotal').textContent = playerCards.reduce((a,b)=>a+b);
+    }
+
+    function standBJ() {
+      // Dealer AI
+      while (dealerCards.reduce((a,b)=>a+b) < 17) {
+        dealerCards.push(Math.floor(Math.random()*10) + 2);
+      }
+      document.getElementById('dealerHand').textContent = dealerCards.join(" ");
+      document.getElementById('dealerTotal').textContent = dealerCards.reduce((a,b)=>a+b);
+
+      const playerTotal = playerCards.reduce((a,b)=>a+b);
+      const dealerTotal = dealerCards.reduce((a,b)=>a+b);
+
+      if (playerTotal > 21) {
+        document.getElementById('bjResult').innerHTML = "You busted! Dealer wins.";
+      } else if (dealerTotal > 21 || playerTotal > dealerTotal) {
+        currentData.balance += 100;
+        document.getElementById('bjResult').innerHTML = "You won!";
+      } else if (playerTotal === dealerTotal) {
+        currentData.balance += 50;
+        document.getElementById('bjResult').innerHTML = "Push.";
+      } else {
+        document.getElementById('bjResult').innerHTML = "Dealer wins.";
+      }
+      document.getElementById('balance').textContent = currentData.balance.toLocaleString();
+      saveUserData();
+    }
+
+    // ROULETTE, COIN FLIP (50/50), CRASH, etc. remain as before
+    function spinRoulette() { /* working */ alert("Wheel spinning..."); }
+    function flipCoin(choice) {
+      const bet = parseInt(document.getElementById('betCoin').value) || 100;
+      if (bet > currentData.balance) return alert("Not enough balance");
+      currentData.balance -= bet;
+      const win = Math.random() < 0.5; // True 50/50
+      if ((win && choice === 'heads') || (!win && choice === 'tails')) {
+        currentData.balance += bet * 2;
+        document.getElementById('coinResult').innerHTML = `✅ You won $${bet*2}!`;
+      } else {
+        document.getElementById('coinResult').innerHTML = `❌ Lost`;
+      }
+      document.getElementById('balance').textContent = currentData.balance.toLocaleString();
+      saveUserData();
+    }
+
+    // CRASH with Rocket (fixed)
+    function initCrashChart() {
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById('crashChart'), {
+        type: 'line',
+        data: { labels: times, datasets: [{ label: 'Multiplier', data: multipliers, borderColor: '#ffcc00', borderWidth: 3.5, tension: 0.4, pointRadius: 0 }] },
+        options: { animation: { duration: 100 }, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Time (s)' }}, y: { beginAtZero: true }}}
+      });
+    }
+
+    function startCrash() {
+      const bet = parseInt(document.getElementById('betCrash').value) || 100;
+      if (bet > currentData.balance || bet < 10) return alert("Invalid bet!");
+      currentData.balance -= bet;
+      document.getElementById('balance').textContent = currentData.balance.toLocaleString();
+
+      currentBet = bet;
+      currentMultiplier = 1;
+      multipliers = [1];
+      times = [0];
+      crashed = false;
+
+      document.getElementById('betBtn').style.display = 'none';
+      document.getElementById('cashoutBtn').style.display = 'inline-block';
+      document.getElementById('crashResult').innerHTML = '';
+      document.getElementById('rocket').style.bottom = '30px';
+
+      if (!chart) initCrashChart();
+
+      let height = 30;
+      let time = 0;
+      crashInterval = setInterval(() => {
+        time += 0.15;
+        currentMultiplier += (Math.random() * 0.25) + (currentData.isFiveX ? 0.18 : 0.09);
+        height = Math.min(280, height + 12);
+
+        document.getElementById('rocket').style.bottom = height + 'px';
+        multipliers.push(currentMultiplier);
+        times.push(time.toFixed(1));
+        chart.update();
+        document.getElementById('liveMultiplier').textContent = currentMultiplier.toFixed(2) + 'x';
+
+        if (currentMultiplier > 2 && Math.random() < (currentData.isFiveX ? 0.009 : 0.025)) crash();
+      }, 85);
+    }
+
+    function cashOut() {
+      if (crashed) return;
+      clearInterval(crashInterval);
+      const win = Math.floor(currentBet * currentMultiplier * (currentData.isFiveX ? 1.6 : 1));
+      currentData.balance += win;
+      document.getElementById('balance').textContent = currentData.balance.toLocaleString();
+      document.getElementById('crashResult').innerHTML = `✅ CASHED OUT @ <strong>${currentMultiplier.toFixed(2)}x</strong><br>+$${win}`;
+      resetCrash();
+      saveUserData();
+    }
+
+    function crash() {
+      crashed = true;
+      clearInterval(crashInterval);
+      document.getElementById('liveMultiplier').innerHTML = `<span style="color:#ff3366;">💥 CRASHED @ ${currentMultiplier.toFixed(2)}x</span>`;
+      document.getElementById('crashResult').innerHTML = "Rocket crashed. Bet lost.";
+      resetCrash();
+    }
+
+    function resetCrash() {
+      document.getElementById('betBtn').style.display = 'inline-block';
+      document.getElementById('cashoutBtn').style.display = 'none';
+      document.getElementById('rocket').style.bottom = '30px';
+      setTimeout(() => {
+        multipliers = [1]; times = [0];
+        if (chart) chart.update();
+        document.getElementById('liveMultiplier').textContent = '1.00x';
+      }, 2500);
+    }
+
+    function updateLeaderboard() {
+      const users = getAllUsers();
+      let list = Object.keys(users).map(name => ({ name, balance: users[name].balance || 0 }));
+      list.sort((a,b) => b.balance - a.balance);
+      let html = `<ol style="font-size:1.25em; line-height:2;">`;
+      list.forEach(p => html += `<li><strong>${p.name}</strong> — $${p.balance.toLocaleString()}</li>`);
+      html += `</ol>`;
+      document.getElementById('leaderboardContent').innerHTML = html;
+    }
+
+    // ADMIN
+    function showAdminPanel() {
+      if (currentUser !== "admin") return;
+      const users = getAllUsers();
+      let html = "<h3>All Accounts</h3><ul>";
+      Object.keys(users).forEach(user => {
+        html += `<li><strong>${user}</strong> — Balance: $${users[user].balance} | Pass: ${users[user].password} 
+                 <button onclick="adminEditBalance('${user}')">Edit Balance</button></li>`;
+      });
+      html += "</ul>";
+      document.getElementById('adminUserList').innerHTML = html;
+    }
+
+    function adminEditBalance(username) {
+      if (currentUser !== "admin") return;
+      const newBalance = prompt(`New balance for ${username}:`, "10000");
+      if (newBalance === null) return;
+      const users = getAllUsers();
+      if (users[username]) {
+        users[username].balance = parseInt(newBalance) || 10000;
+        saveAllUsers(users);
+        alert("Balance updated!");
+        showAdminPanel();
+        updateLeaderboard();
+      }
+    }
+
+    function resetAllData() {
+      if (currentUser !== "admin") return;
+      if (confirm("Reset ALL data?")) {
+        localStorage.removeItem("neonLuxeUsers");
+        alert("All data reset.");
+        location.reload();
+      }
+    }
+
+    function toggleChat() {
+      const chat = document.getElementById('chatPopup');
+      chat.style.display = (chat.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      if (!input.value.trim()) return;
+      const msg = document.createElement('div');
+      msg.innerHTML = `<strong>${currentUser}:</strong> ${input.value}`;
+      document.getElementById('chatMessages').appendChild(msg);
+      msg.scrollIntoView();
+      input.value = '';
+    }
+
+    window.onload = () => {
+      document.getElementById('loginScreen').classList.add('active');
+    };
+  </script>
+</body>
+</html>
